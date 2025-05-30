@@ -1,0 +1,215 @@
+:root {
+  --primary-color: #18a0fb;
+  --primary-hover: #0d8de6;
+  --error-color: #d93025;
+  --success-color: #137333;
+  --info-color: #1a73e8;
+  --border-color: #e5e5e5;
+  --text-color: #333333;
+  --background-color: #ffffff;
+  --input-background: #f8f9fa;
+  --icon-color: #666666;
+  --icon-hover-color: #333333;
+}
+
+.container {
+  max-width: 448px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h2 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.input-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.token-toggle {
+  position: absolute;
+  right: 12px;
+  top: 40%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--icon-color);
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.token-toggle:hover {
+  color: var(--icon-hover-color);
+}
+
+.token-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+input[type='password'],
+input[type='text'],
+select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--input-background);
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type='password']:focus,
+input[type='text']:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.1);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  gap: 8px;
+}
+
+input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary-color);
+}
+
+.checkbox-group label {
+  margin: 0;
+  font-weight: 400;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: var(--primary-hover);
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.output {
+  margin-top: 24px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: var(--input-background);
+}
+
+.output p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.output p:last-child {
+  margin-bottom: 0;
+}
+
+.error {
+  color: var(--error-color);
+}
+
+.success {
+  color: var(--success-color);
+}
+
+.info {
+  color: var(--info-color);
+}
+
+.token-info {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+#deleteButton {
+  background-color: #f8d7da;
+  color: #a94442;
+  border: 1px solid #f5c6cb;
+}
+
+#deleteButton:hover:enabled {
+  background-color: #f1b0b7;
+}
+
+#deleteButton:disabled {
+  background-color: #f8f9fa;
+  color: #cccccc;
+  border: 1px solid #e5e5e5;
+  cursor: not-allowed;
+}
+
+.delete-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

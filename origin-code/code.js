@@ -4,7 +4,7 @@ figma.showUI(__html__, { width: 400, height: 400 });
 function syncSelectionToUI() {
   const selection = figma.currentPage.selection;
   const count = selection.length;
-  const icCount = selection.filter(node => node.name.toLowerCase().includes('ic')).length;
+  const icCount = selection.filter((node) => node.name.toLowerCase().includes('ic')).length;
   figma.ui.postMessage({ type: 'selection-changed', count, icCount });
 }
 
@@ -21,36 +21,36 @@ async function exportSelectedNodesToSvg() {
   if (selectedNodes.length === 0) {
     figma.ui.postMessage({
       type: 'error',
-      message: '내보내려는 아이콘을 선택해주세요.'
+      message: '내보내려는 아이콘을 선택해주세요.',
     });
     return;
   }
 
   const exports = [];
-  
+
   for (const node of selectedNodes) {
     try {
       const svg = await node.exportAsync({
-        format: 'SVG'
+        format: 'SVG',
       });
-      
+
       const svgString = String.fromCharCode.apply(null, svg);
-      
+
       exports.push({
         name: node.name,
-        svg: svgString
+        svg: svgString,
       });
     } catch (error) {
       figma.ui.postMessage({
         type: 'error',
-        message: `"${node.name}" 내보내기 실패: ${error.message}`
+        message: `"${node.name}" 내보내기 실패: ${error.message}`,
       });
     }
   }
 
   figma.ui.postMessage({
     type: 'svg-exports',
-    data: exports
+    data: exports,
   });
 }
 
@@ -59,14 +59,14 @@ async function runCommand(command, cwd) {
   try {
     // 명령어 실행
     const result = await figma.execCommand(command, cwd);
-    
+
     // 성공 응답 전송
     figma.ui.postMessage({
       type: 'command-result',
       data: {
         success: true,
-        result
-      }
+        result,
+      },
     });
   } catch (error) {
     // 실패 응답 전송
@@ -74,8 +74,8 @@ async function runCommand(command, cwd) {
       type: 'command-result',
       data: {
         success: false,
-        error: error.message
-      }
+        error: error.message,
+      },
     });
   }
 }
@@ -96,7 +96,7 @@ figma.ui.onmessage = async (msg) => {
         const svgString = String.fromCharCode.apply(null, svg);
         exports.push({
           name: node.name,
-          data: svgString
+          data: svgString,
         });
       } catch (error) {
         figma.notify(`${node.name} 내보내기 실패: ${error.message}`);
@@ -112,7 +112,7 @@ figma.ui.onmessage = async (msg) => {
     const token = await figma.clientStorage.getAsync('githubToken');
     figma.ui.postMessage({
       type: 'token-loaded',
-      token: token
+      token: token,
     });
   } else if (msg.type === 'set-token') {
     await figma.clientStorage.setAsync('githubToken', msg.token);
@@ -124,7 +124,7 @@ figma.ui.onmessage = async (msg) => {
       figma.notify('선택된 아이콘이 없습니다.');
       return;
     }
-    const names = selection.map(node => node.name);
+    const names = selection.map((node) => node.name);
     figma.ui.postMessage({ type: 'delete-names', data: names });
   }
 };
