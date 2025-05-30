@@ -1,5 +1,19 @@
 figma.showUI(__html__, { width: 400, height: 400 });
 
+// UI에 현재 선택 상태를 동기화하는 함수
+function syncSelectionToUI() {
+  const selection = figma.currentPage.selection;
+  const count = selection.length;
+  const icCount = selection.filter((node) => node.name.toLowerCase().includes('ic')).length;
+  figma.ui.postMessage({ type: 'selection-changed', count, icCount });
+}
+
+// selectionchange 이벤트에서 UI로 선택 개수 전달
+figma.on('selectionchange', syncSelectionToUI);
+
+// 플러그인 실행 시에도 동기화
+syncSelectionToUI();
+
 // 선택된 노드를 SVG로 내보내기
 async function exportSelectedNodesToSvg() {
   const selectedNodes = figma.currentPage.selection;
@@ -41,7 +55,7 @@ async function exportSelectedNodesToSvg() {
 }
 
 // 터미널 명령어 실행
-async function runCommand(command: any, cwd: any) {
+async function runCommand(command, cwd) {
   try {
     // 명령어 실행
     const result = await figma.execCommand(command, cwd);
@@ -79,17 +93,13 @@ figma.ui.onmessage = async (msg) => {
     for (const node of selection) {
       try {
         const svg = await node.exportAsync({ format: 'SVG' });
-        const svgString = String.fromCharCode.apply(null, Array.from(svg));
+        const svgString = String.fromCharCode.apply(null, svg);
         exports.push({
           name: node.name,
           data: svgString,
         });
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          figma.notify(`${node.name} 내보내기 실패: ${error.message}`);
-        } else {
-          figma.notify(`${node.name} 내보내기 실패: 알 수 없는 오류`);
-        }
+      } catch (error) {
+        figma.notify(`${node.name} 내보내기 실패: ${error.message}`);
       }
     }
 

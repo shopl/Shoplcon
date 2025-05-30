@@ -12,17 +12,17 @@
   --icon-hover-color: #333333;
 }
 
-body {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  margin: 0;
+.container {
+  max-width: 448px;
+  margin: 0 auto;
   padding: 24px;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--background-color);
   color: var(--text-color);
 }
 
-.container {
-  max-width: 400px;
-  margin: 0 auto;
+* {
+  box-sizing: border-box;
 }
 
 h2 {
@@ -73,10 +73,11 @@ label {
   color: var(--text-color);
 }
 
-input[type="password"],
-input[type="text"] {
+input[type='password'],
+input[type='text'],
+select {
   width: 100%;
-  padding: 12px 80px 12px 12px;
+  padding: 12px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   background-color: var(--input-background);
@@ -84,8 +85,9 @@ input[type="text"] {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-input[type="password"]:focus,
-input[type="text"]:focus {
+input[type='password']:focus,
+input[type='text']:focus,
+select:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(24, 160, 251, 0.1);
@@ -98,7 +100,7 @@ input[type="text"]:focus {
   gap: 8px;
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   width: 18px;
   height: 18px;
   margin: 0;
@@ -182,17 +184,21 @@ button:disabled {
   vertical-align: middle;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 #deleteButton {
-  background-color: #ffb3b3;
-  color: white;
+  background-color: #f8d7da;
+  color: #a94442;
+  border: 1px solid #f5c6cb;
 }
 
-#deleteButton:hover {
-  background-color: #ff6666;
+#deleteButton:hover:enabled {
+  background-color: #f1b0b7;
+}
+
+#deleteButton:disabled {
+  background-color: #f8f9fa;
+  color: #cccccc;
+  border: 1px solid #e5e5e5;
+  cursor: not-allowed;
 }
 
 .delete-group {
@@ -200,3 +206,10 @@ button:disabled {
   align-items: center;
   gap: 8px;
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
