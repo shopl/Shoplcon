@@ -504,7 +504,7 @@
             const fill = element.getAttribute('fill') || 
                         element.style.fill || 
                         getComputedStyle(element).fill || 
-                        '#000000';
+                        '#00000000';
             
             const stroke = element.getAttribute('stroke') || 
                           element.style.stroke || 
@@ -659,78 +659,88 @@
         return colorMap[color.toLowerCase()] || '#000000';
       }
 
-      // GitHub에 푸시
+      // GitHub에 푸시 (여러 파일을 하나의 커밋으로)
       async function pushToGitHub() {
         try {
           const token = githubTokenInput.value.trim();
           const repo = platformSelect.value === 'web' ? 'shopl/shoplflow' : 'shopl/shopl-design-guide-android';
-          log('GitHub에 파일 업로드 중...');
-          let allSuccess = true;
-          for (const item of svgExports) {
-            const result = await uploadFile(token, item, repo);
-            if (!result) allSuccess = false;
-          }
-          if (allSuccess) {
-            log('GitHub 파일 업로드 완료', 'success');
-            log('GitHub Actions가 자동으로 실행됩니다...', 'info');
-          }
-        } catch (error) {
-          log(`GitHub 업로드 오류: ${error.message}`, 'error');
-        }
-      }
-
-      // 파일 업로드
-      async function uploadFile(token, item, repo) {
-        const fileName = item.name.split('/').pop().trim(); // 폴더 경로 제거
-        const prefix = item.name.split('/')[0];
-        let path, content, isMobile = platformSelect.value === 'mobile';
-        // prefix 조건 체크
-        const isWebPrefix = prefix.startsWith('shopl') || prefix.startsWith('hada');
-        if (isMobile && isWebPrefix) {
-          log(`${fileName} 아이콘은 모바일 플랫폼에서 업로드할 수 없습니다. (prefix: ${prefix})`, 'error');
-          return false;
-        }
-        if (!isMobile && !isWebPrefix) {
-          log(`${fileName} 아이콘은 웹 플랫폼에서만 업로드할 수 있습니다. (prefix: ${prefix})`, 'error');
-          return false;
-        }
-        if (isMobile) {
-          // 모바일: SVG -> Vector Drawable 변환
-          const xml = svgToVectorDrawable(item.data);
-          if (!xml) {
-            log(`${fileName} 변환 실패: 지원하지 않는 SVG입니다.`, 'error');
-            return false;
-          }
-          path = `sdg-resource/src/main/res/drawable/${fileName}.xml`;
-          content = btoa(unescape(encodeURIComponent(xml)));
-        } else {
-          path = `packages/${prefix}-assets/src/icons/assets/${fileName}.svg`;
-          content = btoa(unescape(encodeURIComponent(item.data)));
-        }
-
-        // 1. 기존 파일 정보 가져오기
-        const getResponse = await fetch(
-          `https://api.github.com/repos/${repo}/contents/${path}?ref=update/icon`,
-          {
+          log('브랜치 최신 커밋 정보 가져오는 중...');
+          // 1. 브랜치 최신 커밋 SHA, 트리 SHA 가져오기
+          const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/update/icon`, {
             headers: {
               Authorization: `token ${token}`,
               'Content-Type': 'application/json',
               Accept: 'application/vnd.github.v3+json',
             },
+          });
+          if (!refRes.ok) {
+            log('update/icon 브랜치가 없습니다. 먼저 브랜치를 생성하세요.', 'error');
+            return;
           }
-        );
+          const refData = await refRes.json();
+          const latestCommitSha = refData.object.sha;
 
-        let sha = null;
-        if (getResponse.ok) {
-          const fileInfo = await getResponse.json();
-          sha = fileInfo.sha;
-        }
+          const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits/${latestCommitSha}`, {
+            headers: {
+              Authorization: `token ${token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/vnd.github.v3+json',
+            },
+          });
+          const commitData = await commitRes.json();
+          const baseTreeSha = commitData.tree.sha;
 
-        // 2. 파일 업로드/업데이트
-        const response = await fetch(
-          `https://api.github.com/repos/${repo}/contents/${path}`,
-          {
-            method: 'PUT',
+          // 2. 각 파일을 Blob으로 업로드
+          log('파일 Blob 업로드 중...');
+          const blobs = [];
+          for (const item of svgExports) {
+            const blobSha = await uploadFile(token, item, repo);
+            if (!blobSha) {
+              log(`${item.name} Blob 업로드 실패`, 'error');
+              return;
+            }
+            const fileName = item.name.split('/').pop().trim();
+            const prefix = item.name.split('/')[0];
+            const isMobile = platformSelect.value === 'mobile';
+            const isWebPrefix = prefix.startsWith('shopl') || prefix.startsWith('hada');
+            if (isMobile && isWebPrefix) continue;
+            if (!isMobile && !isWebPrefix) continue;
+            const path = isMobile
+              ? `sdg-resource/src/main/res/drawable/${fileName}.xml`
+              : `packages/${prefix}-assets/src/icons/assets/${fileName}.svg`;
+            blobs.push({ path, mode: '100644', type: 'blob', sha: blobSha });
+          }
+          if (blobs.length === 0) {
+            log('업로드할 파일이 없습니다.', 'error');
+            return;
+          }
+
+          // 3. 새 트리(Tree) 생성
+          log('새 트리 생성 중...');
+          const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+            method: 'POST',
+            headers: {
+              Authorization: `token ${token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/vnd.github.v3+json',
+            },
+            body: JSON.stringify({
+              base_tree: baseTreeSha,
+              tree: blobs,
+            }),
+          });
+          if (!treeRes.ok) {
+            const err = await treeRes.json();
+            log(`트리 생성 실패: ${err.message}`, 'error');
+            return;
+          }
+          const treeData = await treeRes.json();
+          const newTreeSha = treeData.sha;
+
+          // 4. 새 커밋 생성
+          log('새 커밋 생성 중...');
+          const commitRes2 = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+            method: 'POST',
             headers: {
               Authorization: `token ${token}`,
               'Content-Type': 'application/json',
@@ -738,18 +748,75 @@
             },
             body: JSON.stringify({
               message: 'icon 추가/업데이트',
-              content: content,
-              branch: 'update/icon',
-              ...(sha && { sha: sha }), // 기존 파일이 있으면 SHA 포함
+              tree: newTreeSha,
+              parents: [latestCommitSha],
             }),
+          });
+          if (!commitRes2.ok) {
+            const err = await commitRes2.json();
+            log(`커밋 생성 실패: ${err.message}`, 'error');
+            return;
           }
-        );
+          const commitData2 = await commitRes2.json();
+          const newCommitSha = commitData2.sha;
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(`파일 업로드 실패: ${error.message}`);
+          // 5. 브랜치(ref) 업데이트
+          log('브랜치 업데이트 중...');
+          const patchRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/update/icon`, {
+            method: 'PATCH',
+            headers: {
+              Authorization: `token ${token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/vnd.github.v3+json',
+            },
+            body: JSON.stringify({
+              sha: newCommitSha,
+            }),
+          });
+          if (!patchRes.ok) {
+            const err = await patchRes.json();
+            log(`브랜치 업데이트 실패: ${err.message}`, 'error');
+            return;
+          }
+          log('GitHub 파일 업로드 및 커밋 완료', 'success');
+          log('GitHub Actions가 자동으로 실행됩니다...', 'info');
+        } catch (error) {
+          log(`GitHub 업로드 오류: ${error.message}`, 'error');
         }
-        return true;
+      }
+
+      // 파일 Blob 업로드 (커밋 X)
+      async function uploadFile(token, item, repo) {
+        const fileName = item.name.split('/').pop().trim();
+        const prefix = item.name.split('/')[0];
+        let content, isMobile = platformSelect.value === 'mobile';
+        const isWebPrefix = prefix.startsWith('shopl') || prefix.startsWith('hada');
+        if (isMobile && isWebPrefix) return null;
+        if (!isMobile && !isWebPrefix) return null;
+        if (isMobile) {
+          // 모바일: SVG -> Vector Drawable 변환
+          const xml = svgToVectorDrawable(item.data);
+          if (!xml) return null;
+          content = btoa(unescape(encodeURIComponent(xml)));
+        } else {
+          content = btoa(unescape(encodeURIComponent(item.data)));
+        }
+        // Blob 업로드
+        const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+          method: 'POST',
+          headers: {
+            Authorization: `token ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/vnd.github.v3+json',
+          },
+          body: JSON.stringify({
+            content: atob(content), // base64 → plain text
+            encoding: 'utf-8',
+          }),
+        });
+        if (!blobRes.ok) return null;
+        const blobData = await blobRes.json();
+        return blobData.sha;
       }
 
       // 브랜치 생성
