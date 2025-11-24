@@ -230,7 +230,7 @@
         <label for="platformSelect">대상 플랫폼</label>
         <select id="platformSelect">
           <option value="web">웹</option>
-          <option value="mobile">모바일</option>
+          <option value="android">안드로이드</option>
           <option value="ios">iOS</option>
         </select>
       </div>
@@ -687,7 +687,7 @@
           let repo;
           if (platform === 'web') {
             repo = 'shopl/shoplflow';
-          } else if (platform === 'mobile') {
+          } else if (platform === 'android') {
             repo = 'shopl/shopl-design-guide-android';
           } else if (platform === 'ios') {
             repo = 'shopl/shopl-design-guide-ios';
@@ -730,12 +730,12 @@
             const fileName = item.name.split('/').pop().trim();
             const prefix = item.name.split('/')[0];
             const isWebPrefix = prefix.startsWith('shopl') || prefix.startsWith('hada');
-            if (platform === 'mobile' && isWebPrefix) continue;
+            if (platform === 'android' && isWebPrefix) continue;
             if (platform === 'web' && !isWebPrefix) continue;
             if (platform === 'ios' && !isWebPrefix) continue;
 
             let path;
-            if (platform === 'mobile') {
+            if (platform === 'android') {
               path = `sdg-resource/src/main/res/drawable/${fileName}.xml`;
               blobs.push({ path, mode: '100644', type: 'blob', sha: blobResult });
             } else if (platform === 'web') {
@@ -841,12 +841,12 @@
         const isWebPrefix = prefix.startsWith('shopl') || prefix.startsWith('hada');
 
         // 플랫폼별 prefix 필터링
-        if (platform === 'mobile' && isWebPrefix) return null;
+        if (platform === 'android' && isWebPrefix) return null;
         if (platform === 'web' && !isWebPrefix) return null;
         if (platform === 'ios' && isWebPrefix) return null;
 
         let content;
-        if (platform === 'mobile') {
+        if (platform === 'android') {
           // 모바일: SVG -> Vector Drawable 변환
           const xml = svgToVectorDrawable(item.data);
           if (!xml) return null;
@@ -907,7 +907,7 @@
           let repo;
           if (platform === 'web') {
             repo = 'shopl/shoplflow';
-          } else if (platform === 'mobile') {
+          } else if (platform === 'android') {
             repo = 'shopl/shopl-design-guide-android';
           } else if (platform === 'ios') {
             repo = 'shopl/shopl-design-guide-ios';
@@ -990,7 +990,7 @@
         let repo;
         if (platform === 'web') {
           repo = 'shopl/shoplflow';
-        } else if (platform === 'mobile') {
+        } else if (platform === 'android') {
           repo = 'shopl/shopl-design-guide-android';
         } else if (platform === 'ios') {
           repo = 'shopl/shopl-design-guide-ios';
@@ -1001,7 +1001,7 @@
         const isWebPrefix = prefix.startsWith('shopl') || prefix.startsWith('hada');
 
         // 플랫폼별 prefix 검증
-        if (platform === 'mobile' && isWebPrefix) {
+        if (platform === 'android' && isWebPrefix) {
           log(`${fileName} 아이콘은 모바일 플랫폼에서 삭제할 수 없습니다. (prefix: ${prefix})`, 'error');
           return;
         }
@@ -1068,7 +1068,7 @@
         } else {
           // 웹, 모바일은 기존 로직 사용
           let path;
-          if (platform === 'mobile') {
+          if (platform === 'android') {
             path = `sdg-resource/src/main/res/drawable/${fileName}.xml`;
           } else {
             path = `packages/${prefix}-assets/src/icons/assets/${fileName}.svg`;
