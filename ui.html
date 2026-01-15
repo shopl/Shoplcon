@@ -743,7 +743,7 @@
               blobs.push({ path, mode: '100644', type: 'blob', sha: blobResult });
             } else if (platform === 'ios') {
               // iOS는 .imageset 폴더 안에 SVG와 Contents.json 생성
-              const imagesetPath = `Sources/ShoplDesignGuide/Resources/Assets.xcassets/Images/${fileName}.imageset`;
+              const imagesetPath = `Sources/ShoplDesignGuide/Resources/Assets/Images.xcassets/${fileName}.imageset`;
               blobs.push({
                 path: `${imagesetPath}/${fileName}.svg`,
                 mode: '100644',
